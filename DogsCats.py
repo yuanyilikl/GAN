@@ -279,17 +279,3 @@ if __name__=='__main__':
     import fire
     fire.Fire()
 
-
-# train_dataset = DogCat(opt.train_data_root, train = True)
-# trainloader = DataLoader(train_dataset, batch_size = opt.batch_size, shuffle = True,
-#                          num_wprkers = opt.num_wprkers)
-# for ii, (data, label) in enumerate(trainloader):
-#     train()
-
-# from .models import AlexNet
-# from config import DefaultConfig
-
-# opt = DefaultConfig()
-# lr = opt.lr
-# model = getattr(models, opt.model)
-# dataset = DogCat(opt.train_data_root)

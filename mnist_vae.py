@@ -86,15 +86,15 @@ def train(**kwargs):
     makedir(opt)   
 
     # work with data 
-    dataset = torchvision.datasets.MNIST(root = "data", 
-                                        train = True, 
+    dataset = torchvision.datasets.MNIST(root     = "data", 
+                                        train     = True, 
                                         transform = transforms.ToTensor(), 
-                                        download = False)
+                                        download  = False)
     dataloader = torch.utils.data.DataLoader(dataset,
-                                            batch_size = opt.batch_size,
-                                            shuffle = True, 
-                                            num_workers = opt.num_workers, 
-                                            drop_last = True)
+                                             batch_size  = opt.batch_size,
+                                             shuffle     = True, 
+                                             num_workers = opt.num_workers, 
+                                             drop_last   = True)
     
     # net
     map_location = lambda storage, loc: storage
@@ -138,17 +138,17 @@ def generate(**kwargs):
     for k_, v_ in kwargs.items():
         setattr(opt, k_, v_)
 
-    dataset = torchvision.datasets.MNIST(root = "data", 
-                                        train = True, 
+    dataset = torchvision.datasets.MNIST(root     = "data", 
+                                        train     = True, 
                                         transform = transforms.ToTensor(), 
-                                        download = False)
+                                        download  = False)
     dataloader = torch.utils.data.DataLoader(dataset,
-                                            batch_size = opt.batch_size,
-                                            shuffle = True, 
+                                            batch_size  = opt.batch_size,
+                                            shuffle     = True, 
                                             num_workers = opt.num_workers, 
-                                            drop_last = True)
+                                            drop_last   = True)
 
-    model = VAE(opt).to(device) 
+    model  = VAE(opt).to(device) 
     noises = torch.randn(opt.batch_size, opt.z_dim)
     noises = Variable(noises).to(device)
     if opt.gen_epoch is None:
@@ -170,10 +170,10 @@ def generate(**kwargs):
 
     out2 = model.decode(noises).view(-1, 1, 28, 28)
     # save image
-    gen_img = "result_vae_%ss.png" %opt.gen_epoch
+    gen_img = "figure/result_vae_%ss.png" %opt.gen_epoch
     torchvision.utils.save_image((x_reconst), gen_img)
     
-    gen_img = "sample_vae_%ss.png" %opt.gen_epoch
+    gen_img = "figure/sample_vae_%ss.png" %opt.gen_epoch
     torchvision.utils.save_image((out2), gen_img)
 
 

@@ -231,7 +231,7 @@ def generate(**kwargs):
         result.append(fake_img.data[ii].view(1,opt.image_size, opt.image_size))
 
     # save image
-    gen_img = "result_cgan_%s.png" %opt.digit
+    gen_img = "figure/result_cgan_%s.png" %opt.digit
     torchvision.utils.save_image(torch.stack(result), 
                                             gen_img, 
                                             normalize = True, 
@@ -241,27 +241,7 @@ if __name__ == '__main__':
     import fire
     fire.Fire()
 
-"""                                           
-def generate_digit(generate, digit):
-    digit = opt.digit
-    z = torch.randn(1, 100).to(device)
-    label = torch.LongTensor([digit]).to(device)
-    img = generate(z, label).detach().cpu()
-    img = 0.5 * img + 0.5
-    return transforms.ToPILImage()(img)
 
-from torchvision.utils import make_grid
-
-z = torch.randn(100, 100).to(device)
-labels = torch.LongTensor([i for i in range(10) for _ in range(10)]).to(device)
-
-images = generate(z, labels).unqueeze(1)
-grid = make_grid(images, nrow = 10, normalize = True)
-fig, ax = plt.subplots(figsize = (10, 10))
-ax.imshow(grid.permute(1, 2, 0).detach().cpu().numpy(), cmap = "binary")
-ax.axis("off")
-
-"""
 
   
 

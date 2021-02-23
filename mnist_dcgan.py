@@ -51,8 +51,8 @@ device = torch.device('cuda') if opt.use_gpu else torch.device('cpu')
 class NetG(nn.Module):
     def __init__(self, opt):
         super(NetG, self).__init__()
-        ngf = opt.ngf
         self.label_emb = nn.Embedding(10, opt.embe_dim)
+        ngf = opt.ngf
         nz1 = opt.nz + opt.embe_dim
 
         self.main = nn.Sequential(
@@ -72,17 +72,17 @@ class NetG(nn.Module):
             # out shape: 1 * 28 * 28
             )
     def forward(self, input, label):
-        label = self.label_emb(label)
-        label = label.view(label.size(0),label.size(1),1,1)        
-        input1  = torch.cat([input, label], 1)
+        label  = self.label_emb(label)
+        label  = label.view(label.size(0),label.size(1),1,1)        
+        input1 = torch.cat([input, label], 1)
         return self.main(input1)
 
 class NetD(nn.Module):
     def __init__(self, opt):
         super(NetD, self).__init__()
-        ndf = opt.ndf
-        self.image_size = opt.image_size
-        self.label_emb = nn.Embedding(10, opt.embe_dim) 
+        ndf              = opt.ndf
+        self.image_size  = opt.image_size
+        self.label_emb   = nn.Embedding(10, opt.embe_dim) 
 
         self.label_trans = nn.Sequential(
             nn.Linear(10, opt.image_size*opt.image_size),
@@ -108,7 +108,7 @@ class NetD(nn.Module):
         label = self.label_emb(label)
         label = self.label_trans(label)
         label = label.view(-1,1,self.image_size,self.image_size)
-        input  = torch.cat([input, label], 1)
+        input = torch.cat([input, label], 1)
         return self.main(input).view(-1)
 
 def makedir(opt):
@@ -134,19 +134,19 @@ def train(**kwargs):
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.5),(0.5))
     ])
-    dataset = torchvision.datasets.MNIST(root = "data", train = True, transform = trans, download = False)
+    dataset    = torchvision.datasets.MNIST(root = "data", train = True, transform = trans, download = False)
     dataloader = torch.utils.data.DataLoader(dataset,
-                                            batch_size = opt.batch_size,
-                                            shuffle = True, 
+                                            batch_size  = opt.batch_size,
+                                            shuffle     = True, 
                                             num_workers = opt.num_workers, 
-                                            drop_last = True)
+                                            drop_last   = True)
 
     #  net
-    map_location = lambda storage, loc: storage
-    netg, netd = NetG(opt), NetD(opt)
+    map_location  = lambda storage, loc: storage
+    netg, netd    = NetG(opt), NetD(opt)
     if opt.gen_epoch:
-        netg_path    = 'checkpoints/dcgan_netg_%s.pth' %opt.gen_epoch
-        netd_path    = 'checkpoints/dcgan_netd_%s.pth' %opt.gen_epoch
+        netg_path = 'checkpoints/dcgan_netg_%s.pth' %opt.gen_epoch
+        netd_path = 'checkpoints/dcgan_netd_%s.pth' %opt.gen_epoch
         netd.load_state_dict(torch.load(netd_path, map_location = map_location))
         netg.load_state_dict(torch.load(netg_path, map_location = map_location))
         # python mnist_dcgan.py train --gen_epoch=3
@@ -156,19 +156,19 @@ def train(**kwargs):
     # optimizer and loss
     optimizer_g = torch.optim.Adam(netg.parameters(), opt.lr_g, betas = (opt.beta1, 0.999))
     optimizer_d = torch.optim.Adam(netd.parameters(), opt.lr_d, betas = (opt.beta1, 0.999))
-    criterion = torch.nn.BCELoss().to(device)
+    criterion   = torch.nn.BCELoss().to(device)
 
     # true: label = 1, fake: label = 0
     true_labels = Variable(torch.ones(opt.batch_size)).to(device)
     fake_labels = Variable(torch.zeros(opt.batch_size)).to(device)
-    fix_noises = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
-    noises = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
+    fix_noises  = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
+    noises      = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
 
     # train net
     epochs = range(opt.max_epoch)
     for epoch in iter(epochs):
         for ii, (img, label ) in tqdm.tqdm(enumerate(dataloader)):
-            real_img = Variable(img)
+            real_img   = Variable(img)
             real_label = Variable(label)
             real_img.to(device) 
             real_label.to(device) 
@@ -177,15 +177,15 @@ def train(**kwargs):
             if (ii + 1) % opt.dis_every == 0:
                 optimizer_d.zero_grad()
 
-                output = netd(real_img, real_label)
+                output       = netd(real_img, real_label)
                 error_d_real = criterion(output, true_labels)
                 error_d_real.backward()
 
                 noises.data.copy_(torch.randn(opt.batch_size, opt.nz, 1, 1))
-                fake_label = torch.randint(0, 10, (opt.batch_size, )).to(device)
+                fake_label   = torch.randint(0, 10, (opt.batch_size, )).to(device)
 
-                fake_img = netg(noises, fake_label).detach()
-                fake_output = netd(fake_img, fake_label)
+                fake_img     = netg(noises, fake_label).detach()
+                fake_output  = netd(fake_img, fake_label)
                 error_d_fake = criterion(fake_output, fake_labels)
                 error_d_fake.backward()
                 optimizer_d.step()
@@ -194,11 +194,11 @@ def train(**kwargs):
             if (ii + 1) % opt.gen_every == 0:
                 optimizer_g.zero_grad()
                 noises.data.copy_(torch.randn(opt.batch_size, opt.nz, 1, 1))
-                fake_label = torch.randint(0, 10, (opt.batch_size, )).to(device)
+                fake_label  = torch.randint(0, 10, (opt.batch_size, )).to(device)
 
-                fake_img = netg(noises, fake_label)               
+                fake_img    = netg(noises, fake_label)               
                 fake_output = netd(fake_img, fake_label)
-                error_g = criterion(fake_output, true_labels)
+                error_g     = criterion(fake_output, true_labels)
                 error_g.backward()
                 optimizer_g.step() 
 
@@ -229,8 +229,8 @@ def generate(**kwargs):
         gen_epoch = 1
     else:
         gen_epoch = opt.gen_epoch
-    netg_path    = 'checkpoints/dcgan_netg_%s.pth' %gen_epoch
-    netd_path    = 'checkpoints/dcgan_netd_%s.pth' %gen_epoch
+    netg_path     = 'checkpoints/dcgan_netg_%s.pth' %gen_epoch
+    netd_path     = 'checkpoints/dcgan_netd_%s.pth' %gen_epoch
 
     map_location = lambda storage, loc: storage
     netd.load_state_dict(torch.load(netd_path, map_location = map_location))
@@ -249,25 +249,25 @@ def generate(**kwargs):
         result.append(fake_img.data[ii].view(1,opt.image_size, opt.image_size))
     
     # save image
-    gen_img = "result_dcgan_%s.png" %opt.digit
+    gen_img = "figure/result_dcgan_%s.png" %opt.digit
     torchvision.utils.save_image(torch.stack(result), 
                                             gen_img, 
                                             normalize = True, 
-                                            range=(-1, 1))
+                                            range     = (-1, 1))
 
     result = []
     for i in range(opt.ncateg):
-        label  = (i)* torch.ones(opt.gen_search_num).long().to(device)
+        label    = (i)* torch.ones(opt.gen_search_num).long().to(device)
         fake_img = netg(noises, label)
-        scores = netd(fake_img, label).detach()
-        indexs = scores.topk(8)[1]
+        scores   = netd(fake_img, label).detach()
+        indexs   = scores.topk(8)[1]
         for ii in indexs:
             result.append(fake_img.data[ii].view(1,opt.image_size, opt.image_size))       
-        gen_img = "result_dcgan_0-9.png" 
+        gen_img  = "figure/result_dcgan_0-9.png" 
         torchvision.utils.save_image(torch.stack(result), 
                                             gen_img, 
                                             normalize = True, 
-                                            range=(-1, 1))    
+                                            range     = (-1, 1))    
 
 if __name__ == '__main__':
     import fire

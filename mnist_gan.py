@@ -10,7 +10,6 @@ import tqdm
 import os
 
 class Config(object):
-    #data_path    = "data/"
     num_workers  = 4
     image_size   = 28
     batch_size   = 128
@@ -118,12 +117,12 @@ def train(**kwargs):
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.5),(0.5))
     ])
-    dataset = torchvision.datasets.MNIST(root = "data", train = True, transform = trans, download = True)
+    dataset    = torchvision.datasets.MNIST(root = "data", train = True, transform = trans, download = True)
     dataloader = torch.utils.data.DataLoader(dataset,
-                                            batch_size = opt.batch_size,
-                                            shuffle = True, 
+                                            batch_size  = opt.batch_size,
+                                            shuffle     = True, 
                                             num_workers = opt.num_workers, 
-                                            drop_last = True)
+                                            drop_last   = True)
 
     #  net
     map_location = lambda storage, loc: storage
@@ -140,13 +139,13 @@ def train(**kwargs):
     # optimizer and loss
     optimizer_g = torch.optim.Adam(netg.parameters(), opt.lr_g, betas = (opt.beta1, 0.999))
     optimizer_d = torch.optim.Adam(netd.parameters(), opt.lr_d, betas = (opt.beta1, 0.999))
-    criterion = torch.nn.BCELoss().to(device)
+    criterion   = torch.nn.BCELoss().to(device)
 
     # true: label = 1, fake: label = 0
     true_labels = Variable(torch.ones(opt.batch_size)).to(device)
     fake_labels = Variable(torch.zeros(opt.batch_size)).to(device)
-    fix_noises = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
-    noises = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
+    fix_noises  = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
+    noises      = Variable(torch.randn(opt.batch_size, opt.nz, 1, 1)).to(device)
 
     # train net
     epochs = range(opt.max_epoch)
@@ -159,13 +158,13 @@ def train(**kwargs):
             if (ii + 1) % opt.dis_every == 0:
                 optimizer_d.zero_grad()
 
-                output = netd(real_img)
+                output       = netd(real_img)
                 error_d_real = criterion(output, true_labels)
                 error_d_real.backward()
 
                 noises.data.copy_(torch.randn(opt.batch_size, opt.nz, 1, 1))
-                fake_img = netg(noises).detach()
-                fake_output = netd(fake_img)
+                fake_img     = netg(noises).detach()
+                fake_output  = netd(fake_img)
                 error_d_fake = criterion(fake_output, fake_labels)
                 error_d_fake.backward()
                 optimizer_d.step()
@@ -174,7 +173,7 @@ def train(**kwargs):
             if (ii + 1) % opt.gen_every == 0:
                 optimizer_g.zero_grad()
                 noises.data.copy_(torch.randn(opt.batch_size, opt.nz, 1, 1))
-                fake_img = netg(noises)
+                fake_img    = netg(noises)
                 fake_output = netd(fake_img)
 
                 error_g = criterion(fake_output, true_labels)
@@ -210,9 +209,9 @@ def generate(**kwargs):
         gen_epoch = 1
     else:
         gen_epoch = opt.gen_epoch
-    netg_path    = 'checkpoints/gan_netg_%s.pth' %gen_epoch
-    netd_path    = 'checkpoints/gan_netd_%s.pth' %gen_epoch
-    gen_img      = "result_gan_%s.png" %gen_epoch
+    netg_path  = 'checkpoints/gan_netg_%s.pth' %gen_epoch
+    netd_path  = 'checkpoints/gan_netd_%s.pth' %gen_epoch
+    gen_img    = "figure/result_gan_%s.png" %gen_epoch
 
     map_location = lambda storage, loc: storage
     netd.load_state_dict(torch.load(netd_path, map_location = map_location))
@@ -222,7 +221,7 @@ def generate(**kwargs):
 
     #  generate imags and compute scores
     fake_img = netg(noises)
-    scores = netd(fake_img).detach()
+    scores   = netd(fake_img).detach()
     
     # choice best image
     indexs = scores.topk(opt.gen_num)[1]
@@ -236,7 +235,7 @@ def generate(**kwargs):
     torchvision.utils.save_image(torch.stack(result), 
                                             gen_img, 
                                             normalize = True, 
-                                            range=(-1, 1))
+                                            range     = (-1, 1))
 
 
 if __name__ == '__main__':
